@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Internal Medicine Residency Programs</title>
+    <style>
+        body { font-family: Arial, sans-serif; padding: 20px; background-color: #f4f4f4; }
+        header { text-align: center; margin-bottom: 20px; }
+        .filters { text-align: center; margin-bottom: 20px; }
+        .filters select { margin: 0 10px; padding: 5px; }
+        table { width: 100%; border-collapse: collapse; background-color: white; }
+        th, td { padding: 10px; border-bottom: 1px solid #ddd; text-align: left; }
+        .details { display: none; padding: 10px; background-color: #f9f9f9; }
+    </style>
+</head>
+<body>
+
+<header>
+    <h1>Internal Medicine Residency Programs</h1>
+    <p>Click on a program name to see full details. Use the filters to narrow your search.</p>
+</header>
+
+<div class="filters">
+    <label>Filter by State: <select id="stateFilter"></select></label>
+    <label>Filter by Visa Type: <select id="visaFilter"></select></label>
+    <label>Filter by IMG %: <select id="imgFilter"></select></label>
+    <button onclick="resetFilters()">Reset Filters</button>
+</div>
+
+<table>
+    <thead>
+        <tr>
+            <th>Program Name</th>
+            <th>Visa Type</th>
+            <th>State</th>
+            <th>IMG %</th>
+            <th>Select</th>
+        </tr>
+    </thead>
+    <tbody id="programTableBody"></tbody>
+</table>
+
+<script>
+    let programs = [];
+
+    fetch('programs.json')
+        .then(response => response.json())
+        .then(data => {
+            programs = data;
+            populateFilters();
+            renderPrograms(programs);
+        });
+
+    function populateFilters() {
+        populateSelect('stateFilter', [...new Set(programs.map(p => p.State))]);
+        populateSelect('visaFilter', [...new Set(programs.map(p => p.Visa))]);
+        populateSelect('imgFilter', [...new Set(programs.map(p => p['IMG Percentage']))]);
+    }
+
+    function populateSelect(id, options) {
+        const select = document.getElementById(id);
+        select.innerHTML = '<option value="">All</option>' + options.map(o => `<option>${o}</option>`).join('');
+        select.onchange = filterPrograms;
+    }
+
+    function renderPrograms(list) {
+        const tbody = document.getElementById('programTableBody');
+        tbody.innerHTML = '';
+
+        list.forEach((program, index) => {
+            const row = document.createElement('tr');
+            row.innerHTML = `
+                <td onclick="toggleDetails(${index})">${program['Program Name']}</td>
+                <td>${program.Visa}</td>
+                <td>${program.State}</td>
+                <td>${program['IMG Percentage']}</td>
+                <td><input type="checkbox"></td>`;
+
+            tbody.appendChild(row);
+
+            const detailRow = document.createElement('tr');
+            detailRow.innerHTML = `<td colspan="5" class="details" id="details${index}">
+                <strong>Residents:</strong> ${program.Residents}<br>
+                <strong>Program Director:</strong> ${program['Program Director']}<br>
+                <strong>Coordinator:</strong> ${program.Coordinator}<br>
+                <strong>Phone:</strong> ${program.Phone}<br>
+                <strong>Email:</strong> ${program.Email}<br>
+                <strong>YOG Cutoff:</strong> ${program.YOG}<br>
+                <strong>Step 2 Cutoff:</strong> ${program['Step 2 Cutoff']}<br>
+                <strong>LOR Required:</strong> ${program['LOR Required']}<br>
+                <strong>USCE Required:</strong> ${program['USCE Required']}<br>
+                <strong>Website:</strong> <a href="${program.Website}" target="_blank">Visit Website</a>
+            </td>`;
+            tbody.appendChild(detailRow);
+        });
+    }
+
+    function toggleDetails(index) {
+        const details = document.getElementById(`details${index}`);
+        details.style.display = details.style.display === 'table-cell' ? 'none' : 'table-cell';
+    }
+
+    function filterPrograms() {
+        const state = document.getElementById('stateFilter').value;
+        const visa = document.getElementById('visaFilter').value;
+        const img = document.getElementById('imgFilter').value;
+
+        const filtered = programs.filter(p =>
+            (!state || p.State === state) &&
+            (!visa || p.Visa === visa) &&
+            (!img || String(p['IMG Percentage']) === img)
+        );
+
+        renderPrograms(filtered);
+    }
+
+    function resetFilters() {
+        document.getElementById('stateFilter').value = '';
+        document.getElementById('visaFilter').value = '';
+        document.getElementById('imgFilter').value = '';
+        renderPrograms(programs);
+    }
+</script>
+
+</body>
+</html>
