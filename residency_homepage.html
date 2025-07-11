@@ -47,7 +47,25 @@
     fetch('programs.json')
         .then(response => response.json())
         .then(data => {
-            programs = data;
+            programs = data.map(p => {
+                const j1 = p['J1(Y/N)'] === 'Y';
+                const h1b = p['H1B (Y/N)'] === 'Y';
+                let visa = 'None';
+                if (j1 && h1b) visa = 'J1/H1B';
+                else if (j1) visa = 'J1';
+                else if (h1b) visa = 'H1B';
+
+                return {
+                    ...p,
+                    Visa: visa,
+                    'IMG Percentage': p['%non-US IMG'],
+                    Residents: p['Total # of residents'],
+                    YOG: p['YOG cutoff'],
+                    'Step 2 Cutoff': p['Step2 cutoff'],
+                    'LOR Required': p['LoR specification'],
+                    'USCE Required': p['USCE specification']
+                };
+            });
             populateFilters();
             renderPrograms(programs);
         });
@@ -81,16 +99,13 @@
 
             const detailRow = document.createElement('tr');
             detailRow.innerHTML = `<td colspan="5" class="details" id="details${index}">
+                <strong>Community Type:</strong> ${program['Community Based']}<br>
                 <strong>Residents:</strong> ${program.Residents}<br>
-                <strong>Program Director:</strong> ${program['Program Director']}<br>
-                <strong>Coordinator:</strong> ${program.Coordinator}<br>
-                <strong>Phone:</strong> ${program.Phone}<br>
-                <strong>Email:</strong> ${program.Email}<br>
                 <strong>YOG Cutoff:</strong> ${program.YOG}<br>
                 <strong>Step 2 Cutoff:</strong> ${program['Step 2 Cutoff']}<br>
                 <strong>LOR Required:</strong> ${program['LOR Required']}<br>
                 <strong>USCE Required:</strong> ${program['USCE Required']}<br>
-                <strong>Website:</strong> <a href="${program.Website}" target="_blank">Visit Website</a>
+                <strong>Additional Information:</strong> ${program['Additional Information'] || ''}
             </td>`;
             tbody.appendChild(detailRow);
         });
