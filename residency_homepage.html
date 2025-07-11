@@ -48,8 +48,8 @@
         .then(response => response.json())
         .then(data => {
             programs = data.map(p => {
-                const j1 = p['J1(Y/N)'] === 'Y';
-                const h1b = p['H1B (Y/N)'] === 'Y';
+                const j1 = (p['J1(Y/N)'] || '').trim() === 'Y';
+                const h1b = (p['H1B (Y/N)'] || '').trim() === 'Y';
                 let visa = 'None';
                 if (j1 && h1b) visa = 'J1/H1B';
                 else if (j1) visa = 'J1';
@@ -58,7 +58,7 @@
                 return {
                     ...p,
                     Visa: visa,
-                    'IMG Percentage': p['%non-US IMG'],
+                    'IMG Percentage': p['%non-US IMG'] ?? 'N/A',
                     Residents: p['Total # of residents'],
                     YOG: p['YOG cutoff'],
                     'Step 2 Cutoff': p['Step2 cutoff'],
@@ -71,9 +71,9 @@
         });
 
     function populateFilters() {
-        populateSelect('stateFilter', [...new Set(programs.map(p => p.State))]);
-        populateSelect('visaFilter', [...new Set(programs.map(p => p.Visa))]);
-        populateSelect('imgFilter', [...new Set(programs.map(p => p['IMG Percentage']))]);
+        populateSelect('stateFilter', [...new Set(programs.map(p => p.State).filter(Boolean))]);
+        populateSelect('visaFilter', [...new Set(programs.map(p => p.Visa).filter(Boolean))]);
+        populateSelect('imgFilter', [...new Set(programs.map(p => p['IMG Percentage']).filter(v => v !== 'N/A'))]);
     }
 
     function populateSelect(id, options) {
